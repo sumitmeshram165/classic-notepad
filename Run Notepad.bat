@@ -1,2 +1,2 @@
 @echo off
-python "%~dp0notepad.py"
+python "%~dp0notepad.py" %*

@@ -19,5 +19,16 @@ Double-click `Run Notepad.bat`, or run:
 ```text
 python notepad.py
 ```
+To open an existing file from a terminal:
+
+```text
+python notepad.py "sample file.txt"
+```
 
 The app supports plain text editing, New/Open/Save/Save As, undo and redo, clipboard commands, word wrap, a status bar, F5 time/date, and zoom with Ctrl plus `+`, `-`, `0`, or the mouse wheel.
+
+Run the file handling checks with:
+
+```text
+python -m unittest test_file_io.py
+```

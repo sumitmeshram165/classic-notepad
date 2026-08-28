@@ -77,6 +77,19 @@ class Notepad:
         self.update_title()
         self.update_status()
 
+    def load_file(self, path):
+        path = Path(path).expanduser()
+        try:
+            content = path.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError) as error:
+            messagebox.showerror("Notepad", f"Could not open the file.\n\n{error}")
+            return False
+        self.file_path = str(path.resolve())
+        self.set_text(content)
+        self.update_title()
+        self.update_status()
+        return True
+
     def build_menu(self):
         menu_bar = tk.Menu(self.root)
         self.root.config(menu=menu_bar)
@@ -184,15 +197,7 @@ class Notepad:
         )
         if not selected:
             return "break"
-        try:
-            content = Path(selected).read_text(encoding="utf-8-sig")
-        except (OSError, UnicodeError) as error:
-            messagebox.showerror("Notepad", f"Could not open the file.\n\n{error}")
-            return "break"
-        self.file_path = selected
-        self.set_text(content)
-        self.update_title()
-        self.update_status()
+        self.load_file(selected)
         return "break"
 
     def save_file(self):
@@ -306,7 +311,9 @@ class Notepad:
 
 def main():
     root = tk.Tk()
-    Notepad(root)
+    app = Notepad(root)
+    if len(sys.argv) > 1 and sys.argv[1].strip():
+        app.load_file(sys.argv[1])
     root.mainloop()
 
 

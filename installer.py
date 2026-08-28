@@ -10,6 +10,8 @@ APP_NAME = "Classic Notepad"
 INSTALL_DIR = Path.home() / "AppData" / "Local" / "Classic Notepad"
 START_MENU_DIR = Path.home() / "AppData" / "Roaming" / "Microsoft" / "Windows" / "Start Menu" / "Programs"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ClassicNotepad"
+TXT_KEY = r"Software\Classes\.txt"
+PROG_ID_KEY = r"Software\Classes\ClassicNotepad.Text"
 COMPATIBILITY_KEY = r"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"
 
 
@@ -40,6 +42,23 @@ def register_uninstaller(uninstaller):
         winreg.SetValueEx(key, "NoRepair", 0, winreg.REG_DWORD, 1)
 
 
+def register_file_association(app):
+    previous = ""
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, TXT_KEY) as key:
+            previous = winreg.QueryValueEx(key, "")[0]
+    except FileNotFoundError:
+        pass
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, PROG_ID_KEY + r"\shell\open\command") as key:
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, f'"{app}" "%1"')
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, PROG_ID_KEY) as key:
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, APP_NAME)
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, TXT_KEY) as key:
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "ClassicNotepad.Text")
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY) as key:
+        winreg.SetValueEx(key, "PreviousTxtAssociation", 0, winreg.REG_SZ, previous)
+
+
 def remove_old_dpi_override(app):
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, COMPATIBILITY_KEY, 0, winreg.KEY_SET_VALUE) as key:
@@ -59,6 +78,7 @@ def install():
         shutil.copy2(bundled_file("ClassicNotepad.exe"), app)
         shutil.copy2(bundled_file("Uninstall.exe"), uninstaller)
         make_shortcut(app, START_MENU_DIR / "Classic Notepad.lnk")
+        register_file_association(app)
         register_uninstaller(uninstaller)
         messagebox.showinfo("Classic Notepad", "Classic Notepad was installed.")
     except (OSError, subprocess.SubprocessError, FileNotFoundError) as error:
