@@ -53,8 +53,11 @@ class Notepad:
         root.protocol("WM_DELETE_WINDOW", self.exit_app)
 
         self.text_font = tkfont.Font(root, family="Consolas", size=self.font_size)
+        editor_frame = tk.Frame(root)
+        editor_frame.pack(fill="both", expand=True)
+
         self.text = tk.Text(
-            root,
+            editor_frame,
             undo=True,
             wrap="word",
             font=self.text_font,
@@ -63,7 +66,10 @@ class Notepad:
             borderwidth=0,
             highlightthickness=0,
         )
-        self.text.pack(fill="both", expand=True)
+        self.scrollbar = tk.Scrollbar(editor_frame, orient="vertical", command=self.text.yview)
+        self.text.config(yscrollcommand=self.update_scrollbar)
+        self.text.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
         self.text.focus_set()
         self.text.bind("<<Modified>>", self.on_modified)
         self.text.bind("<KeyRelease>", self.update_status)
@@ -76,6 +82,13 @@ class Notepad:
         self.set_text("")
         self.update_title()
         self.update_status()
+
+    def update_scrollbar(self, first, last):
+        self.scrollbar.set(first, last)
+        if float(first) <= 0 and float(last) >= 1:
+            self.scrollbar.pack_forget()
+        elif not self.scrollbar.winfo_ismapped():
+            self.scrollbar.pack(side="right", fill="y")
 
     def load_file(self, path):
         path = Path(path).expanduser()
